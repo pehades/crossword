@@ -1,10 +1,13 @@
 import os
+from functools import cache
 
 import chromadb
+from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
 from tavily import TavilyClient
 
 from crossword import REPOSITORY_DIR
@@ -17,19 +20,33 @@ from crossword.adapters.web_search import WebSearchEngine
 from crossword.agents.tools import build_lookup_facts_tool, build_web_search_tool, build_wikipedia_tool
 
 
+class ConfigFactory:
+
+    @classmethod
+    @cache
+    def get_env_config(cls) -> EnvConfig:
+        # load_dotenv also exports to os.environ, which is where langsmith reads its settings
+        load_dotenv(REPOSITORY_DIR / '.env')
+        return EnvConfig(
+            nebius_api_key=os.environ['NEBIUS_API_KEY'],
+            tavily_api_key=os.environ['TAVILY_API_KEY'],
+            wikipedia_headers=os.environ['WIKIPEDIA_HEADERS'],
+        )
+
+
 class AdaptersFactory:
 
     @classmethod
     def get_web_search_engine(cls) -> WebSearchEngine:
 
-        config = EnvConfig()
+        config = ConfigFactory.get_env_config()
         return WebSearchEngine(
             client=TavilyClient(api_key=config.tavily_api_key)
         )
 
     @classmethod
     def get_wikipedia_search(cls) -> Wikipedia:
-        config = EnvConfig()
+        config = ConfigFactory.get_env_config()
         return Wikipedia(headers={'User-Agent': config.wikipedia_headers})
 
     @classmethod
@@ -43,7 +60,7 @@ class LLMFactory:
 
     @classmethod
     def get_chat_model(cls) -> BaseChatModel:
-        config = EnvConfig()
+        config = ConfigFactory.get_env_config()
         return ChatOpenAI(
             model=config.llm_model,
             base_url=config.llm_base_url,
@@ -69,7 +86,8 @@ class AgentsFactory:
         return create_agent(
             model=LLMFactory.get_chat_model(),
             system_prompt=QUIZ_AGENT_PROMPT,
-            tools=ToolsFactory.get_research_tools(),
+            tools=[], #ToolsFactory.get_research_tools(),
             state_schema=QuizState,
-            response_format=Quiz
+            response_format=Quiz,
+            checkpointer=InMemorySaver()
         )

@@ -1,12 +1,19 @@
+from langchain_core.messages import HumanMessage
+
 from crossword.common.factories import AgentsFactory
 
-USER_QUERY = 'Make a crossword about Panathinaikos'
+user_query = ''
 
 
 def main() -> None:
-    agent = AgentsFactory.get_quiz_agent()
 
-    result = agent.invoke({'messages': [{'role': 'user', 'content': USER_QUERY}]})
+    agent = AgentsFactory.get_quiz_agent()
+    config = {'configurable': {'thread_id': 1}}
+
+    result = agent.invoke(
+        {'messages': [HumanMessage(content=user_query)]},
+        config=config
+    )
 
     for message in result['messages']:
         message.pretty_print()

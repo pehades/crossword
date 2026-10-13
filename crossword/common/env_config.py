@@ -1,13 +1,8 @@
-from crossword import REPOSITORY_DIR
-
-import os
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from dataclasses import dataclass
 
 
-class EnvConfig(BaseSettings):
-
-    model_config = SettingsConfigDict(env_file=os.path.join(REPOSITORY_DIR, '.env'))
+@dataclass(frozen=True)
+class EnvConfig:
 
     nebius_api_key: str
     tavily_api_key: str
