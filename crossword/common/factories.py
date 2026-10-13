@@ -86,7 +86,7 @@ class AgentsFactory:
         return create_agent(
             model=LLMFactory.get_chat_model(),
             system_prompt=QUIZ_AGENT_PROMPT,
-            tools=[], #ToolsFactory.get_research_tools(),
+            tools=ToolsFactory.get_research_tools(),
             state_schema=QuizState,
             response_format=Quiz,
             checkpointer=InMemorySaver()
