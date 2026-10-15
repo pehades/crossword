@@ -1,7 +1,22 @@
+from datetime import datetime
+
 import requests
 from concurrent.futures import ThreadPoolExecutor
+from pydantic import BaseModel
 
 from crossword.adapters.base_search import BaseSearch, SearchResult
+
+
+class WikipediaPage(BaseModel):
+    pageid: int
+    title: str
+    extract: str = ''
+    contentmodel: str
+    pagelanguage: str
+    touched: datetime
+    lastrevid: int
+    length: int
+    fullurl: str
 
 
 class Wikipedia(BaseSearch):
@@ -13,14 +28,15 @@ class Wikipedia(BaseSearch):
     def search(self, query: str) -> list[SearchResult]:
         return [
             SearchResult(
-                id=f"wikipedia:{page['id']}",
+                id=f"wikipedia:{page.pageid}",
+                url=page.fullurl,
                 source='wikipedia',
-                title=page['title'],
-                content=page['document']
+                title=page.title,
+                content=page.extract
             ) for page in self.get_pages_for_topic(query, srlimit=1)
         ]
 
-    def get_pages_for_topic(self, searches: str | list[str], srlimit: int = 5) -> list[dict]:
+    def get_pages_for_topic(self, searches: str | list[str], srlimit: int = 5) -> list[WikipediaPage]:
 
         if isinstance(searches, str):
             searches = [searches]
@@ -36,16 +52,7 @@ class Wikipedia(BaseSearch):
             for page in topic.json()['query']['search']:
                 pages[page['pageid']] = page
 
-        pages_content = self.get_pages(list(pages))
-
-        return [
-            {
-                'title': page['title'],
-                'id': page['pageid'],
-                'summary': page['snippet'],
-                'document': pages_content[str(page['pageid'])]['extract']
-            } for page in pages.values() if str(page['pageid']) in pages_content
-        ]
+        return list(self.get_pages(list(pages)).values())
 
     def search_topic(self, search: str, srlimit: int):
         import time
@@ -66,7 +73,8 @@ class Wikipedia(BaseSearch):
     def get_page(self, pageids: str):
         import time
         params = {
-            'action': 'query', 'prop': 'extracts', 'pageids': pageids, 'explaintext': 1, 'format': 'json'
+            'action': 'query', 'prop': 'extracts|info', 'pageids': pageids, 'explaintext': 1, 'format': 'json',
+            'inprop': 'url'
         }
         for attempt in range(3):
             result = requests.get(url=self.url, headers=self.headers, params=params)
@@ -78,7 +86,7 @@ class Wikipedia(BaseSearch):
             return []
         return result
 
-    def get_pages(self, pageids: list[int]) -> dict[int, dict]:
+    def get_pages(self, pageids: list[int]) -> dict[int, WikipediaPage]:
 
         # with ThreadPoolExecutor(max_workers=1) as executor:
         #     responses = executor.map(self.get_page, pageids)
@@ -87,6 +95,8 @@ class Wikipedia(BaseSearch):
         for response in responses:
             if not response:
                 continue
-            pages.update(response.json()['query']['pages'])
+            for page in response.json()['query']['pages'].values():
+                parsed_page = WikipediaPage.model_validate(page)
+                pages[parsed_page.pageid] = parsed_page
 
         return pages

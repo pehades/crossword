@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class SearchResult(BaseModel):
     id: str
+    url: str
     source: str
     title: str
     content: str

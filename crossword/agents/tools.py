@@ -37,7 +37,7 @@ def build_lookup_facts_tool(vector_db: VectorDB) -> BaseTool:
         documents = vector_db.query(query, result_ids=list(search_results))[:TOP_K_FACTS]
         if not documents:
             return "No facts found. Search with wikipedia_search or web_search_tool first."
-        return "\n\n---\n\n".join(documents)
+        return "\n\n---\n\n".join([d.model_dump_json() for d in documents])
 
     return lookup_facts
 

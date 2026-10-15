@@ -12,7 +12,8 @@ class WebSearchEngine(BaseSearch):
         results = self.client.search(query, include_raw_content=True)['results']
         return [
             SearchResult(
-                id=result['url'],
+                id=f'web_search:{result['url']}',
+                url=result['url'],
                 source='web',
                 title=result['title'],
                 # raw_content is the full page, fall back to the snippet when tavily couldn't extract it

@@ -3,6 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitte
 from sentence_transformers import CrossEncoder
 
 from crossword.adapters.base_search import SearchResult
+from crossword.agents.models import DBDocument
 
 
 class VectorDB:
@@ -35,10 +36,11 @@ class VectorDB:
         self.collection.add(
             ids=[f"{result.id}_{i}" for i in range(len(chunks))],
             documents=chunks,
-            metadatas=[{'result_id': result.id, 'source': result.source} for _ in chunks]
+            metadatas=[{'result_id': result.id, 'source': result.source, 'url': result.url, 'title': result.title}
+                       for _ in chunks]
         )
 
-    def query(self, query: str, result_ids: list[str]) -> list[str]:
+    def query(self, query: str, result_ids: list[str]) -> list[DBDocument]:
         """Return the chunks most relevant to the query, searching only within the given results."""
         if not result_ids:
             return []
@@ -50,8 +52,8 @@ class VectorDB:
         )
 
         documents_with_relevancy_score = [
-            {'query': query, 'document': d, 'score': float(self.reranker.predict((query, d)))}
-            for d in results['documents'][0]
+            {'result_id': metadata['result_id'], 'url': metadata['url'], 'query': query, 'document': d, 'score': float(self.reranker.predict((query, d)))}
+            for d, metadata in zip(results['documents'][0], results['metadatas'][0])
         ]
 
         sorted_documents = sorted(documents_with_relevancy_score, key=lambda x: x['score'], reverse=True)
