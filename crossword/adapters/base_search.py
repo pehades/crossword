@@ -1,14 +1,6 @@
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel
-
-
-class SearchResult(BaseModel):
-    id: str
-    url: str
-    source: str
-    title: str
-    content: str
+from crossword.business_logic.models import SearchResult
 
 
 class BaseSearch(ABC):

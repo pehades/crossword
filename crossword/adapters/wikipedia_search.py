@@ -4,7 +4,8 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 from pydantic import BaseModel
 
-from crossword.adapters.base_search import BaseSearch, SearchResult
+from crossword.adapters.base_search import BaseSearch
+from crossword.business_logic.models import SearchResult
 
 
 class WikipediaPage(BaseModel):

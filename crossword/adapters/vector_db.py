@@ -2,8 +2,7 @@ import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 from sentence_transformers import CrossEncoder
 
-from crossword.adapters.base_search import SearchResult
-from crossword.agents.models import DBDocument
+from crossword.business_logic.models import DBDocument, SearchResult
 
 
 class VectorDB:
@@ -52,9 +51,16 @@ class VectorDB:
         )
 
         documents_with_relevancy_score = [
-            {'result_id': metadata['result_id'], 'url': metadata['url'], 'query': query, 'document': d, 'score': float(self.reranker.predict((query, d)))}
-            for d, metadata in zip(results['documents'][0], results['metadatas'][0])
+            DBDocument.model_validate(
+                {
+                    'chunk_id': chunk_id,
+                    'document_id': metadata['result_id'],
+                    'url': metadata['url'],
+                    'query': query,
+                    'document': d,
+                    'score': float(self.reranker.predict((query, d)))
+                }
+            ) for chunk_id, d, metadata in zip(results['ids'][0], results['documents'][0], results['metadatas'][0])
         ]
 
-        sorted_documents = sorted(documents_with_relevancy_score, key=lambda x: x['score'], reverse=True)
-        return [d['document'] for d in sorted_documents]
+        return sorted(documents_with_relevancy_score, key=lambda x: x.score, reverse=True)

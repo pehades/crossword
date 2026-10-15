@@ -1,6 +1,6 @@
 import pytest
 
-from crossword.adapters.base_search import SearchResult
+from crossword.business_logic.models import SearchResult
 from crossword.adapters.vector_db import VectorDB
 from crossword.common.factories import AdaptersFactory
 

@@ -1,5 +1,5 @@
 from langchain.tools import ToolRuntime
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import ToolMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 from langgraph.types import Command
 
@@ -55,3 +55,24 @@ def build_web_search_tool(web_search: BaseSearch) -> BaseTool:
         })
 
     return web_search_tool
+
+
+def build_create_quiz_tool(quiz_agent):
+
+    @tool
+    def create_quiz(query: str, runtime: ToolRuntime) -> Command:
+        """
+        Receives a query and invokes the quiz_agent to create a crossword  out of it.
+        """
+
+        qa_pairs = quiz_agent.invoke({'messages': HumanMessage(content=query)})
+
+        return Command(
+            update={
+                'messages': ToolMessage('quiz_agent called', tool_call_id=runtime.tool_call_id),
+                'quiz': qa_pairs['structured_response'],
+            }
+        )
+
+    return create_quiz
+

@@ -1,6 +1,7 @@
 from tavily import TavilyClient
 
-from crossword.adapters.base_search import BaseSearch, SearchResult
+from crossword.adapters.base_search import BaseSearch
+from crossword.business_logic.models import SearchResult
 
 
 class WebSearchEngine(BaseSearch):

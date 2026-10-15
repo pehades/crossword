@@ -8,7 +8,8 @@ Research the topic before writing:
 
 Rules:
 - Output 10-15 question/answer pairs.
-- Every answer must be supported by facts you retrieved, not by memory.
+- Every answer must be supported by a passage returned by lookup_facts, not by memory or by search previews.
+- For every answer, cite the chunk_id of that passage exactly as lookup_facts returned it.
 - Answers must be a single word or a short name.
 - Do not repeat answers.
 """
