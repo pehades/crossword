@@ -13,12 +13,13 @@ from tavily import TavilyClient
 from crossword import REPOSITORY_DIR
 from crossword.adapters.vector_db import VectorDB
 from crossword.adapters.wikipedia_search import Wikipedia
-from crossword.agents.prompts import QUIZ_AGENT_PROMPT
-from crossword.agents.schemas import QuizState
+from crossword.agents.prompts import QUIZ_AGENT_PROMPT, ORCHESTRATOR_AGENT_PROMPT
+from crossword.agents.schemas import QuizState, OrchestratorState
 from crossword.business_logic.models import Quiz
 from crossword.common.env_config import EnvConfig
 from crossword.adapters.web_search import WebSearchEngine
-from crossword.agents.tools import build_lookup_facts_tool, build_web_search_tool, build_wikipedia_tool
+from crossword.agents.tools import build_lookup_facts_tool, build_web_search_tool, build_wikipedia_tool, \
+    build_create_quiz_tool
 
 
 class ConfigFactory:
@@ -83,11 +84,27 @@ class ToolsFactory:
 class AgentsFactory:
 
     @classmethod
+    def get_orchestrator_agent(cls):
+        return create_agent(
+            model=LLMFactory.get_chat_model(),
+            system_prompt=ORCHESTRATOR_AGENT_PROMPT,
+            tools=[
+                build_create_quiz_tool(cls.get_quiz_agent())
+            ],
+            state_schema=OrchestratorState,
+            checkpointer=InMemorySaver(),
+        )
+
+    @classmethod
     def get_quiz_agent(cls):
         return create_agent(
             model=LLMFactory.get_chat_model(),
             system_prompt=QUIZ_AGENT_PROMPT,
-            tools=ToolsFactory.get_research_tools(),
+            tools=[
+                build_wikipedia_tool(AdaptersFactory.get_wikipedia_search()),
+                build_lookup_facts_tool(AdaptersFactory.get_vector_db()),
+                build_web_search_tool(AdaptersFactory.get_web_search_engine()),
+            ],
             state_schema=QuizState,
             response_format=Quiz
         )

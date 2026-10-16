@@ -2,15 +2,15 @@ from langchain_core.messages import HumanMessage
 
 from crossword.common.factories import AgentsFactory
 
-user_query = ''
+user_query = 'make a quiz about mitsotakis'
 
 
 def main() -> None:
 
-    agent = AgentsFactory.get_quiz_agent()
+    orchestrator_agent = AgentsFactory.get_orchestrator_agent()
     config = {'configurable': {'thread_id': 1}}
 
-    result = agent.invoke(
+    result = orchestrator_agent.invoke(
         {'messages': [HumanMessage(content=user_query)]},
         config=config
     )
