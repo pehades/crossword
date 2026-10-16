@@ -70,29 +70,22 @@ class LLMFactory:
         )
 
 
-class ToolsFactory:
-
-    @classmethod
-    def get_research_tools(cls) -> list[BaseTool]:
-        return [
-            build_wikipedia_tool(AdaptersFactory.get_wikipedia_search()),
-            build_lookup_facts_tool(AdaptersFactory.get_vector_db()),
-            build_web_search_tool(AdaptersFactory.get_web_search_engine()),
-        ]
-
-
 class AgentsFactory:
 
     @classmethod
-    def get_orchestrator_agent(cls):
+    def get_orchestrator_agent(cls, quiz_agent=None, checkpointer=None):
+
+        quiz_agent = quiz_agent if quiz_agent else cls.get_quiz_agent()
+        checkpointer = checkpointer if checkpointer else InMemorySaver()
+
         return create_agent(
             model=LLMFactory.get_chat_model(),
             system_prompt=ORCHESTRATOR_AGENT_PROMPT,
             tools=[
-                build_create_quiz_tool(cls.get_quiz_agent())
+                build_create_quiz_tool(quiz_agent)
             ],
             state_schema=OrchestratorState,
-            checkpointer=InMemorySaver(),
+            checkpointer=checkpointer,
         )
 
     @classmethod

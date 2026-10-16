@@ -1,6 +1,5 @@
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
-from sentence_transformers import CrossEncoder
 
 from crossword.business_logic.models import DBDocument, SearchResult
 
@@ -11,12 +10,15 @@ class VectorDB:
             self,
             client: chromadb.ClientAPI,
             splitter: TextSplitter | None = None,
-            reranker: CrossEncoder | None = None
+            reranker=None
     ):
         self.client = client
         self.collection = self.client.get_or_create_collection('search_results', metadata={"hnsw:space": "cosine"})
 
         self.splitter = splitter or RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+
+        # This import takes time, so we only import it when we initialize VectorDB
+        from sentence_transformers import CrossEncoder
         self.reranker = reranker or CrossEncoder('cross-encoder/ms-marco-MiniLM-L6-v2')
 
     def insert(self, results: list[SearchResult]) -> None:

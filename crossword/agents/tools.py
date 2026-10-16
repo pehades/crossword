@@ -69,7 +69,7 @@ def build_create_quiz_tool(quiz_agent):
 
         return Command(
             update={
-                'messages': ToolMessage('quiz_agent called', tool_call_id=runtime.tool_call_id),
+                'messages': [ToolMessage('quiz_agent called', tool_call_id=runtime.tool_call_id)],
                 'quiz': qa_pairs['structured_response'],
             }
         )
