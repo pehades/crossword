@@ -39,8 +39,14 @@ def chat(chat_request: ChatRequest):
                 token, metadata = chunk
                 if token.content and metadata['langgraph_node'] == 'model':
                     yield ChatStreamEvent(message=token.content)
+            if mode == 'updates':
+                for node, update in chunk.items():
+                    updates = update if isinstance(chunk, list) else [update]
+                    for update in updates:
+                        if 'quiz' in update:
+                            yield ChatStreamEvent(message='', quiz=update['quiz'])
     except Exception as exc:
-        yield ChatStreamEvent(message='')
+        yield ChatStreamEvent(message='', error=str(exc))
     yield ChatStreamEvent(message='')
 
 

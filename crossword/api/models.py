@@ -11,3 +11,4 @@ class ChatRequest(BaseModel):
 class ChatStreamEvent(BaseModel):
     message: str = ''
     quiz: Quiz | None = None
+    error: str | None = None
