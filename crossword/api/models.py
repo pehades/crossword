@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
 
 
 class ChatStreamEvent(BaseModel):
+    thread_id: str | None = None
     message: str = ''
     quiz: Quiz | None = None
     error: str | None = None

@@ -1,13 +1,10 @@
-import json
 import uuid
 from contextlib import asynccontextmanager
-from typing import Iterable
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.sse import ServerSentEvent, EventSourceResponse
+from fastapi.sse import EventSourceResponse
 from langchain_core.messages import AIMessageChunk, HumanMessage
-from starlette.responses import StreamingResponse
 
 
 from crossword.common.factories import AgentsFactory
@@ -28,7 +25,7 @@ def chat(chat_request: ChatRequest):
     thread_id = chat_request.thread_id if chat_request.thread_id else str(uuid.uuid4())
     orchestrator_agent = app.state.orchestrator_agent
 
-    yield ChatStreamEvent(message='')
+    yield ChatStreamEvent(thread_id=thread_id)
     try:
         for mode, chunk in orchestrator_agent.stream(
                 {'messages': [HumanMessage(content=chat_request.message)]},
@@ -47,7 +44,6 @@ def chat(chat_request: ChatRequest):
                             yield ChatStreamEvent(message='', quiz=update['quiz'])
     except Exception as exc:
         yield ChatStreamEvent(message='', error=str(exc))
-    yield ChatStreamEvent(message='')
 
 
 @app.get('/health')
