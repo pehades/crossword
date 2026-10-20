@@ -15,6 +15,7 @@ from crossword.adapters.vector_db import VectorDB
 from crossword.adapters.wikipedia_search import Wikipedia
 from crossword.agents.prompts import QUIZ_AGENT_PROMPT, ORCHESTRATOR_AGENT_PROMPT
 from crossword.agents.schemas import QuizState, OrchestratorState
+from crossword.business_logic.crossword_builder import CrossWordBuilder
 from crossword.business_logic.models import Quiz
 from crossword.common.env_config import EnvConfig
 from crossword.adapters.web_search import WebSearchEngine
@@ -73,16 +74,17 @@ class LLMFactory:
 class AgentsFactory:
 
     @classmethod
-    def get_orchestrator_agent(cls, quiz_agent=None, checkpointer=None):
+    def get_orchestrator_agent(cls, quiz_agent=None, checkpointer=None, crossword_builder=None):
 
         quiz_agent = quiz_agent if quiz_agent else cls.get_quiz_agent()
         checkpointer = checkpointer if checkpointer else InMemorySaver()
+        crossword_builder = crossword_builder if crossword_builder else CrossWordBuilder()
 
         return create_agent(
             model=LLMFactory.get_chat_model(),
             system_prompt=ORCHESTRATOR_AGENT_PROMPT,
             tools=[
-                build_create_quiz_tool(quiz_agent)
+                build_create_quiz_tool(quiz_agent, crossword_builder)
             ],
             state_schema=OrchestratorState,
             checkpointer=checkpointer,

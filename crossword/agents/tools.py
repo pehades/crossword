@@ -6,6 +6,7 @@ from langgraph.types import Command
 from crossword.adapters.base_search import BaseSearch
 from crossword.adapters.vector_db import VectorDB
 from crossword.adapters.wikipedia_search import Wikipedia
+from crossword.business_logic.crossword_builder import CrossWordBuilder
 
 PREVIEW_CHARS = 500
 TOP_K_FACTS = 5
@@ -57,7 +58,7 @@ def build_web_search_tool(web_search: BaseSearch) -> BaseTool:
     return web_search_tool
 
 
-def build_create_quiz_tool(quiz_agent):
+def build_create_quiz_tool(quiz_agent, crossword_builder: CrossWordBuilder):
 
     @tool
     def create_quiz(query: str, runtime: ToolRuntime) -> Command:
@@ -66,11 +67,13 @@ def build_create_quiz_tool(quiz_agent):
         """
 
         qa_pairs = quiz_agent.invoke({'messages': HumanMessage(content=query)})
+        quiz = qa_pairs['structured_response']
 
         return Command(
             update={
                 'messages': [ToolMessage('quiz_agent called', tool_call_id=runtime.tool_call_id)],
-                'quiz': qa_pairs['structured_response'],
+                'quiz': quiz,
+                'crossword': crossword_builder.build(quiz),
             }
         )
 

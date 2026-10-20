@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -27,3 +29,20 @@ class QuestionAnswer(BaseModel):
 
 class Quiz(BaseModel):
     items: list[QuestionAnswer]
+
+
+class PlacedWord(BaseModel):
+    number: int
+    direction: Literal['across', 'down']
+    row: int
+    col: int
+    answer: str
+    clue: str
+    chunk_id: str
+
+
+class Crossword(BaseModel):
+    rows: int
+    cols: int
+    words: list[PlacedWord]
+    unplaced: list[QuestionAnswer] = []

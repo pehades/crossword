@@ -2,7 +2,7 @@ from typing import Annotated, NotRequired
 
 from langchain.agents import AgentState
 
-from crossword.business_logic.models import Quiz, SearchResult
+from crossword.business_logic.models import Crossword, Quiz, SearchResult
 
 
 def merge_search_results(left: dict | None, right: dict) -> dict:
@@ -15,3 +15,4 @@ class QuizState(AgentState):
 
 class OrchestratorState(AgentState):
     quiz: NotRequired[Quiz]
+    crossword: NotRequired[Crossword]
