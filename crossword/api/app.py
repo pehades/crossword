@@ -34,14 +34,14 @@ def chat(chat_request: ChatRequest):
         ):
             if mode == 'messages':
                 token, metadata = chunk
-                if token.content and metadata['langgraph_node'] == 'model':
+                if token.content and metadata['langgraph_node'] == 'model' and '|' not in metadata.get('checkpoint_ns', ''):
                     yield ChatStreamEvent(message=token.content)
             if mode == 'updates':
                 for node, update in chunk.items():
-                    updates = update if isinstance(chunk, list) else [update]
-                    for update in updates:
-                        if 'quiz' in update:
-                            yield ChatStreamEvent(message='', quiz=update['quiz'])
+                    items = update if isinstance(update, list) else [update]
+                    for item in items:
+                        if isinstance(item, dict) and item.get('crossword'):
+                            yield ChatStreamEvent(crossword=item['crossword'])
     except Exception as exc:
         yield ChatStreamEvent(message='', error=str(exc))
 
