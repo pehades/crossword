@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.sse import EventSourceResponse
 from langchain_core.messages import AIMessageChunk, HumanMessage
 
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=['http://localhost:5173'], allow_methods=['*'], allow_headers=['*'])
 
 
 @app.post('/chat', response_class=EventSourceResponse)
@@ -40,6 +42,8 @@ def chat(chat_request: ChatRequest):
                 for node, update in chunk.items():
                     items = update if isinstance(update, list) else [update]
                     for item in items:
+                        if node == 'model' and isinstance(item, dict) and item.get('messages') and item['messages'][-1].tool_calls:
+                            yield ChatStreamEvent(status='Researching the topic and building your crossword...')
                         if isinstance(item, dict) and item.get('crossword'):
                             yield ChatStreamEvent(crossword=item['crossword'])
     except Exception as exc:
