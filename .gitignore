@@ -17,3 +17,6 @@ chromadb.db/
 .idea/
 
 .ipynb_checkpoints/
+
+# Frontend
+node_modules/
