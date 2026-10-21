@@ -24,6 +24,10 @@ export function createAdapter(onCrossword: (crossword: Crossword) => void): Chat
         body: JSON.stringify({ message, thread_id: threadId }),
         signal: abortSignal,
         openWhenHidden: true,
+        async onopen(response) {
+          if (response.status === 429) throw new Error('You reached the request limit, try again later.')
+          if (!response.ok) throw new Error(`Request failed (${response.status})`)
+        },
         onmessage(ev) {
           if (!ev.data) return
           queue.push(JSON.parse(ev.data))

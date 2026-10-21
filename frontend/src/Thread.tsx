@@ -1,4 +1,4 @@
-import { ComposerPrimitive, MessagePrimitive, ThreadPrimitive } from '@assistant-ui/react'
+import { ComposerPrimitive, ErrorPrimitive, MessagePrimitive, ThreadPrimitive } from '@assistant-ui/react'
 import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
 
 function MarkdownText() {
@@ -18,7 +18,9 @@ function AssistantMessage() {
     <MessagePrimitive.Root className="message assistant">
       <MessagePrimitive.Parts components={{ Text: MarkdownText }} />
       <MessagePrimitive.Error>
-        <div className="error">Something went wrong.</div>
+        <ErrorPrimitive.Root className="error">
+          <ErrorPrimitive.Message />
+        </ErrorPrimitive.Root>
       </MessagePrimitive.Error>
     </MessagePrimitive.Root>
   )

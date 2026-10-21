@@ -2,12 +2,12 @@ import uuid
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.sse import EventSourceResponse
-from langchain_core.messages import AIMessageChunk, HumanMessage
+from langchain_core.messages import HumanMessage
 
-
+from crossword.api.rate_limit import RateLimiter
 from crossword.common.factories import AgentsFactory
 from crossword.api.models import ChatRequest, ChatStreamEvent
 
@@ -21,8 +21,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=['http://localhost:5173'], allow_methods=['*'], allow_headers=['*'])
 
+rate_limiter = RateLimiter(n_requests_allowed=15, window_seconds=3600 * 6)
 
-@app.post('/chat', response_class=EventSourceResponse)
+
+@app.post('/chat', response_class=EventSourceResponse, dependencies=[Depends(rate_limiter)])
 def chat(chat_request: ChatRequest):
     thread_id = chat_request.thread_id if chat_request.thread_id else str(uuid.uuid4())
     orchestrator_agent = app.state.orchestrator_agent
@@ -56,4 +58,4 @@ def health():
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=8000, proxy_headers=True, forwarded_allow_ips='*')
