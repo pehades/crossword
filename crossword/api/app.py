@@ -2,19 +2,24 @@ import uuid
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.sse import EventSourceResponse
 from langchain_core.messages import HumanMessage
 
 from crossword.api.rate_limit import RateLimiter
 from crossword.common.factories import AgentsFactory
+from crossword.common.logger import create_logger
 from crossword.api.models import ChatRequest, ChatStreamEvent
+
+logger = create_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info('Building the orchestrator agent')
     app.state.orchestrator_agent = AgentsFactory.get_orchestrator_agent()
+    logger.info('Orchestrator agent ready')
     yield
 
 
@@ -25,9 +30,10 @@ rate_limiter = RateLimiter(n_requests_allowed=15, window_seconds=3600 * 6)
 
 
 @app.post('/chat', response_class=EventSourceResponse, dependencies=[Depends(rate_limiter)])
-def chat(chat_request: ChatRequest):
+def chat(chat_request: ChatRequest, request: Request):
     thread_id = chat_request.thread_id if chat_request.thread_id else str(uuid.uuid4())
     orchestrator_agent = app.state.orchestrator_agent
+    logger.info(f'Chat request from {request.client.host}, thread {thread_id}: {chat_request.message[:100]}')
 
     yield ChatStreamEvent(thread_id=thread_id)
     try:
@@ -47,8 +53,11 @@ def chat(chat_request: ChatRequest):
                         if node == 'model' and isinstance(item, dict) and item.get('messages') and item['messages'][-1].tool_calls:
                             yield ChatStreamEvent(status='Researching the topic and building your crossword...')
                         if isinstance(item, dict) and item.get('crossword'):
+                            logger.info(f'Sending crossword for thread {thread_id}')
                             yield ChatStreamEvent(crossword=item['crossword'])
+        logger.info(f'Chat finished for thread {thread_id}')
     except Exception as exc:
+        logger.exception(f'Chat failed for thread {thread_id}')
         yield ChatStreamEvent(message='', error=str(exc))
 
 

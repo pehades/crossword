@@ -7,6 +7,9 @@ from crossword.adapters.base_search import BaseSearch
 from crossword.adapters.vector_db import VectorDB
 from crossword.adapters.wikipedia_search import Wikipedia
 from crossword.business_logic.crossword_builder import CrossWordBuilder
+from crossword.common.logger import create_logger
+
+logger = create_logger(__name__)
 
 PREVIEW_CHARS = 500
 TOP_K_FACTS = 5
@@ -17,6 +20,7 @@ def build_wikipedia_tool(wikipedia: Wikipedia) -> BaseTool:
     @tool
     def wikipedia_search(query: str, runtime: ToolRuntime) -> Command:
         """Search Wikipedia with short keywords. Returns the beginning of the matching articles; use lookup_facts for details."""
+        logger.info(f'[TOOL CALL] wikipedia_search: {query}')
         results = wikipedia.search(query)
         preview = "\n\n".join(f"# {result.title}\n{result.content[:PREVIEW_CHARS]}" for result in results)
         return Command(update={
@@ -32,6 +36,7 @@ def build_lookup_facts_tool(vector_db: VectorDB) -> BaseTool:
     @tool
     def lookup_facts(query: str, runtime: ToolRuntime) -> str:
         """Retrieve the most relevant passages for a specific question from everything found so far with wikipedia_search and web_search_tool."""
+        logger.info(f'[TOOL CALL] lookup_facts: {query}')
         search_results = runtime.state.get('search_results', {})
         vector_db.insert(list(search_results.values()))
 
@@ -48,6 +53,7 @@ def build_web_search_tool(web_search: BaseSearch) -> BaseTool:
     @tool
     def web_search_tool(query: str, runtime: ToolRuntime) -> Command:
         """Search the web for up-to-date information. Returns the beginning of the matching pages; use lookup_facts for details."""
+        logger.info(f'[TOOL CALL] web_search_tool: {query}')
         results = web_search.search(query)
         preview = "\n\n".join(f"# {result.title} ({result.id})\n{result.content[:PREVIEW_CHARS]}" for result in results)
         return Command(update={
@@ -66,8 +72,10 @@ def build_create_quiz_tool(quiz_agent, crossword_builder: CrossWordBuilder):
         Receives a query and invokes the quiz_agent to create a crossword  out of it.
         """
 
+        logger.info(f'[TOOL CALL] create_quiz: {query}')
         qa_pairs = quiz_agent.invoke({'messages': HumanMessage(content=query)})
         quiz = qa_pairs['structured_response']
+        logger.info(f'[TOOL CALL] Quiz created with {len(quiz.items)} questions')
 
         return Command(
             update={

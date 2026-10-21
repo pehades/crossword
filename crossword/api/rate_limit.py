@@ -3,6 +3,10 @@ import time
 from fastapi import HTTPException
 from starlette.requests import Request
 
+from crossword.common.logger import create_logger
+
+logger = create_logger(__name__)
+
 
 class RateLimiter:
 
@@ -25,4 +29,5 @@ class RateLimiter:
     # FastAPI calls this when the instance is used as a dependency
     def __call__(self, request: Request):
         if not self.client_can_do_request(client_id=request.client.host):
+            logger.warning(f'Rate limit reached for {request.client.host}')
             raise HTTPException(status_code=429, detail='Too many requests')

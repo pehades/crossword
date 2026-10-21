@@ -6,6 +6,9 @@ from pydantic import BaseModel
 
 from crossword.adapters.base_search import BaseSearch
 from crossword.business_logic.models import SearchResult
+from crossword.common.logger import create_logger
+
+logger = create_logger(__name__)
 
 
 class WikipediaPage(BaseModel):
@@ -64,7 +67,7 @@ class Wikipedia(BaseSearch):
             result = requests.get(url=self.url, headers=self.headers, params=params)
             if result.ok:
                 break
-            print(f"search_topic failed for {search!r}: {result.status_code} {result.reason} - {result.text[:500]}")
+            logger.warning(f"search_topic failed for {search}: {result.status_code} {result.reason} - {result.text[:500]}")
             time.sleep(2 ** attempt)
         if not result.ok:
             return []
@@ -81,7 +84,7 @@ class Wikipedia(BaseSearch):
             result = requests.get(url=self.url, headers=self.headers, params=params)
             if result.ok:
                 break
-            print(f"get_page failed for pageid {pageids}: {result.status_code} {result.reason} - {result.text[:500]}")
+            logger.warning(f"get_page failed for pageid {pageids}: {result.status_code} {result.reason} - {result.text[:500]}")
             time.sleep(2 ** attempt)
         if not result.ok:
             return []
