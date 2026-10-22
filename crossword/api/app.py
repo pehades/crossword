@@ -28,7 +28,7 @@ config = ConfigFactory.get_env_config()
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[config.frontend_origin], allow_methods=['*'], allow_headers=['*'])
 
-rate_limiter = RateLimiter(n_requests_allowed=15, window_seconds=3600 * 6)
+rate_limiter = RateLimiter(n_requests_allowed=45, window_seconds=3600 * 6)
 
 
 @app.post('/chat', response_class=EventSourceResponse, dependencies=[Depends(rate_limiter)])
