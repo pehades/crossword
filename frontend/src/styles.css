@@ -190,6 +190,27 @@ body {
 
 /* crossword */
 
+.puzzle-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.puzzle-actions button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.puzzle-actions button:disabled {
+  color: #9ca3af;
+  cursor: default;
+}
+
 .puzzle {
   display: flex;
   gap: 32px;
