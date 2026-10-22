@@ -34,6 +34,7 @@ class ConfigFactory:
             nebius_api_key=os.environ['NEBIUS_API_KEY'],
             tavily_api_key=os.environ['TAVILY_API_KEY'],
             wikipedia_headers=os.environ['WIKIPEDIA_HEADERS'],
+            frontend_origin=os.environ.get('FRONTEND_ORIGIN', 'http://localhost:5173'),
         )
 
 

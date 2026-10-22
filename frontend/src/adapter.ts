@@ -2,7 +2,8 @@ import type { ChatModelAdapter } from '@assistant-ui/react'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import type { ChatStreamEvent, Crossword } from './types'
 
-const API_URL = 'http://localhost:8000/chat'
+// set at build time; falls back to the local backend for npm run dev
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8000'
 
 export function createAdapter(onCrossword: (crossword: Crossword) => void): ChatModelAdapter {
   let threadId: string | null = null
@@ -18,7 +19,7 @@ export function createAdapter(onCrossword: (crossword: Crossword) => void): Chat
       let failure: unknown = null
       let wake: () => void = () => {}
 
-      fetchEventSource(API_URL, {
+      fetchEventSource(`${BACKEND_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, thread_id: threadId }),

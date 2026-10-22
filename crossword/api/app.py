@@ -8,7 +8,7 @@ from fastapi.sse import EventSourceResponse
 from langchain_core.messages import HumanMessage
 
 from crossword.api.rate_limit import RateLimiter
-from crossword.common.factories import AgentsFactory
+from crossword.common.factories import AgentsFactory, ConfigFactory
 from crossword.common.logger import create_logger
 from crossword.api.models import ChatRequest, ChatStreamEvent
 
@@ -23,8 +23,10 @@ async def lifespan(app: FastAPI):
     yield
 
 
+config = ConfigFactory.get_env_config()
+
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=['http://localhost:5173'], allow_methods=['*'], allow_headers=['*'])
+app.add_middleware(CORSMiddleware, allow_origins=[config.frontend_origin], allow_methods=['*'], allow_headers=['*'])
 
 rate_limiter = RateLimiter(n_requests_allowed=15, window_seconds=3600 * 6)
 
