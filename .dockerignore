@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+.env.*
+.idea
+frontend
+chromadb.db
+**/__pycache__
+*.ipynb
+tryouts.py
