@@ -75,7 +75,7 @@ def build_create_quiz_tool(quiz_agent, crossword_builder: CrossWordBuilder):
         logger.info(f'[TOOL CALL] create_quiz: {query}')
         qa_pairs = quiz_agent.invoke({'messages': HumanMessage(content=query)})
         quiz = qa_pairs['structured_response']
-        logger.info(f'[TOOL CALL] Quiz created with {len(quiz.items)} questions')
+        logger.info(f'[TOOL CALL] Quiz created with {len(quiz.items) if quiz is not None else str(None)} questions')
 
         return Command(
             update={

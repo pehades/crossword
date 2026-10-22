@@ -68,7 +68,8 @@ class LLMFactory:
         return ChatOpenAI(
             model=config.llm_model,
             base_url=config.llm_base_url,
-            api_key=config.nebius_api_key
+            api_key=config.nebius_api_key,
+            stream_usage=True
         )
 
 
