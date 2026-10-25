@@ -87,3 +87,32 @@ def build_create_quiz_tool(quiz_agent, crossword_builder: CrossWordBuilder):
 
     return create_quiz
 
+
+def build_check_query_is_ok_for_crossword_tool(query_checker_agent):
+
+    @tool
+    def check_query_is_ok_for_crossword(query: str, runtime: ToolRuntime) -> Command:
+        """
+        A function that checks whether the user query contains enough information in order to create
+        a valid and interesting crossword/quiz.
+        """
+        logger.info(f'[TOOL CALL] check_query: {query}')
+        query_validation = query_checker_agent.invoke({'messages': HumanMessage(content=query)})
+
+        is_ok = query_validation['structured_response'].is_ok()
+
+        tool_message = 'User query is fine for creating a crossword.' \
+            if is_ok \
+            else 'User query is not fine for creating a crossword. Ask the user to provide more clarifying questions'
+
+        logger.info(f'[TOOL CALL] check_query: {query}, is_ok: {is_ok}')
+        return Command(
+            update={
+                'messages': [
+                    ToolMessage(tool_message, tool_call_id=runtime.tool_call_id)
+                ]
+            }
+        )
+
+    return check_query_is_ok_for_crossword
+

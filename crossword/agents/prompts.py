@@ -32,3 +32,20 @@ Rules:
 - Answers must be a single word or a short name.
 - Do not repeat answers.
 """
+
+
+TOPIC_SPECIFICITY_AGENT_PROMPT = """
+Your role is to check whether a user's crossword request has a clear topic.
+
+A request is ambiguous only when its key term could refer to unrelated subjects that share a name.
+Test: could one crossword mix questions from both interpretations and still feel like one topic?
+If yes, they are the same interpretation, so merge them.
+A broad topic is fine: the crossword can cover any of its aspects.
+
+Examples:
+- "whiskey drinks" -> 1 interpretation: whiskey (cocktails, types and brands are aspects of it)
+- "the Roman Empire" -> 1 interpretation: the Roman Empire
+- "Mercury" -> 4 interpretations: the planet, the chemical element, the Roman god, Freddie Mercury
+- "Queen" -> 2 interpretations: the rock band, monarchy
+- "make me a crossword" -> no topic
+"""

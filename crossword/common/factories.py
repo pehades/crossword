@@ -5,7 +5,6 @@ import chromadb
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
-from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from tavily import TavilyClient
@@ -13,14 +12,14 @@ from tavily import TavilyClient
 from crossword import REPOSITORY_DIR
 from crossword.adapters.vector_db import VectorDB
 from crossword.adapters.wikipedia_search import Wikipedia
-from crossword.agents.prompts import QUIZ_AGENT_PROMPT, ORCHESTRATOR_AGENT_PROMPT
+from crossword.agents.prompts import QUIZ_AGENT_PROMPT, ORCHESTRATOR_AGENT_PROMPT, TOPIC_SPECIFICITY_AGENT_PROMPT
 from crossword.agents.schemas import QuizState, OrchestratorState
 from crossword.business_logic.crossword_builder import CrossWordBuilder
-from crossword.business_logic.models import Quiz
+from crossword.business_logic.models import Quiz, QueryCheck
 from crossword.common.env_config import EnvConfig
 from crossword.adapters.web_search import WebSearchEngine
 from crossword.agents.tools import build_lookup_facts_tool, build_web_search_tool, build_wikipedia_tool, \
-    build_create_quiz_tool
+    build_create_quiz_tool, build_check_query_is_ok_for_crossword_tool
 
 
 class ConfigFactory:
@@ -76,9 +75,10 @@ class LLMFactory:
 class AgentsFactory:
 
     @classmethod
-    def get_orchestrator_agent(cls, quiz_agent=None, checkpointer=None, crossword_builder=None):
+    def get_orchestrator_agent(cls, quiz_agent=None, query_checker_agent=None, checkpointer=None, crossword_builder=None):
 
         quiz_agent = quiz_agent if quiz_agent else cls.get_quiz_agent()
+        query_checker_agent = query_checker_agent if query_checker_agent else cls.get_query_checker_agent()
         checkpointer = checkpointer if checkpointer else InMemorySaver()
         crossword_builder = crossword_builder if crossword_builder else CrossWordBuilder()
 
@@ -86,7 +86,8 @@ class AgentsFactory:
             model=LLMFactory.get_chat_model(),
             system_prompt=ORCHESTRATOR_AGENT_PROMPT,
             tools=[
-                build_create_quiz_tool(quiz_agent, crossword_builder)
+                build_create_quiz_tool(quiz_agent, crossword_builder),
+                build_check_query_is_ok_for_crossword_tool(query_checker_agent)
             ],
             state_schema=OrchestratorState,
             checkpointer=checkpointer,
@@ -104,4 +105,12 @@ class AgentsFactory:
             ],
             state_schema=QuizState,
             response_format=Quiz
+        )
+
+    @classmethod
+    def get_query_checker_agent(cls):
+        return create_agent(
+            model=LLMFactory.get_chat_model(),
+            system_prompt=TOPIC_SPECIFICITY_AGENT_PROMPT,
+            response_format=QueryCheck
         )

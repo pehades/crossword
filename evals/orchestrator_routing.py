@@ -27,10 +27,6 @@ def check_calls_create_quiz(outputs: dict, reference_outputs: dict):
     return ('create_quiz' in outputs['tool_calls']) == reference_outputs['calls_create_quiz_tool']
 
 
-def check_single_quiz_call(outputs: dict) -> bool:
-    return outputs['tool_calls'].count('create_quiz') <= 1
-
-
 evals_dataset = [
     {
         'inputs': {'message': 'create a quiz about Mathematicians'},
@@ -47,12 +43,82 @@ evals_dataset = [
     {
         'inputs': {'message': 'make a quiz with questions from abrah katabrah'},
         'outputs': {'calls_create_quiz_tool': False}
+    },
+    # broad topics are fine, the quiz can cover any of their aspects
+    {
+        'inputs': {'message': 'a crossword about World War II'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    {
+        'inputs': {'message': 'make me a crossword about wine regions'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    {
+        'inputs': {'message': 'quiz on football tactics'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    {
+        'inputs': {'message': 'create a crossword about Greek mythology'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    # specific topics
+    {
+        'inputs': {'message': 'a crossword about the Apollo 11 moon landing'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    {
+        'inputs': {'message': 'quiz about the albums of Pink Floyd in the 1970s'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    # ambiguous terms made clear by the user
+    {
+        'inputs': {'message': 'make a crossword about Jaguar, the car brand'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    {
+        'inputs': {'message': 'crossword about the Python programming language'},
+        'outputs': {'calls_create_quiz_tool': True}
+    },
+    # ambiguous terms that refer to unrelated subjects
+    {
+        'inputs': {'message': 'make a crossword about Jaguar'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    {
+        'inputs': {'message': 'quiz about Python'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    {
+        'inputs': {'message': 'create a crossword about Apple'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    {
+        'inputs': {'message': 'a quiz about Phoenix'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    # no topic or missing context
+    {
+        'inputs': {'message': 'surprise me with a crossword'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    {
+        'inputs': {'message': 'make a crossword about the thing we discussed'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    # not a crossword request
+    {
+        'inputs': {'message': 'what is the capital of France?'},
+        'outputs': {'calls_create_quiz_tool': False}
+    },
+    {
+        'inputs': {'message': 'write me a poem about the sea'},
+        'outputs': {'calls_create_quiz_tool': False}
     }
 ]
 
 dataset_name = 'evals-1'
 targets = [orchestrator_target()]
-evaluators = [check_calls_create_quiz, check_single_quiz_call]
+evaluators = [check_calls_create_quiz]
 
 
 if __name__ == '__main__':

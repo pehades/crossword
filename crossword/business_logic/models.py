@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class DBDocument(BaseModel):
@@ -46,3 +46,19 @@ class Crossword(BaseModel):
     cols: int
     words: list[PlacedWord]
     unplaced: list[QuestionAnswer] = []
+
+
+class QueryCheck(BaseModel):
+    interpretations: list[str] = Field(..., description=(
+        "The different things the key term of the request could refer to. "
+        "Only list two interpretations if they are unrelated subjects that share a name "
+        "(e.g. Mercury the planet vs. Mercury the element). "
+        "Different aspects, sub-areas or angles of the same subject are ONE interpretation."
+    ))
+    has_topic: bool = Field(..., description="Does the request name any topic at all?")
+    clarifying_question: str | None = Field(None, description="If the request has no topic or several interpretations, "
+                                                              "a short question to ask the user, listing the options.")
+
+    def is_ok(self) -> bool:
+        return self.has_topic and len(self.interpretations) == 1
+
