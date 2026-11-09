@@ -71,6 +71,15 @@ class LLMFactory:
             stream_usage=True
         )
 
+    @classmethod
+    def get_llm_as_a_judge_model(cls, model_name: str | None = None) -> BaseChatModel:
+        config = ConfigFactory.get_env_config()
+        return ChatOpenAI(
+            model=model_name if model_name is not None else config.llm_model,
+            base_url=config.llm_base_url,
+            api_key=config.nebius_api_key
+        )
+
 
 class AgentsFactory:
 

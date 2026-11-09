@@ -45,6 +45,6 @@ def run(dataset_name: str, examples: list[dict], targets: list[Callable], evalua
         feedback = [c for c in df.columns if c.startswith('feedback.')]
 
         print(f'\n{results.experiment_name}')
-        print(df[['inputs.message', 'outputs.tool_calls', *feedback, 'error']].to_string())
+        print(df.to_string())
         print('\nmean scores:')
         print(df[feedback].mean().to_string())
