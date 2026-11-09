@@ -25,7 +25,8 @@ def sync_dataset(client: Client, dataset_name: str, examples: list[dict]):
         )
 
 
-def run(dataset_name: str, examples: list[dict], targets: list[Callable], evaluators: list[Callable]):
+def run(dataset_name: str, examples: list[dict], targets: list[Callable], evaluators: list[Callable],
+        num_repetitions: int = 1):
 
     # load env variables and especially langsmith variables
     env_config = ConfigFactory.get_env_config()
@@ -39,6 +40,7 @@ def run(dataset_name: str, examples: list[dict], targets: list[Callable], evalua
             data=dataset_name,
             evaluators=evaluators,
             experiment_prefix=dataset_name,
+            num_repetitions=num_repetitions,
         )
 
         df = results.to_pandas()
@@ -48,3 +50,7 @@ def run(dataset_name: str, examples: list[dict], targets: list[Callable], evalua
         print(df.to_string())
         print('\nmean scores:')
         print(df[feedback].mean().to_string())
+
+        if num_repetitions > 1:
+            print(f'\nper example scores over {num_repetitions} repetitions:')
+            print(df.groupby('example_id')[feedback].agg(['mean', 'min', 'max']).to_string())
